@@ -1,0 +1,28 @@
+c
+      common/files/ikbd0,ikbd,ierr,itmp,idat,icfg,ilog,iout,idyn
+     &              ,isnp,imon
+      common/params/neq,iband,maxstiff, nnp,nel,nmatp,
+     &                  ilump,ibandm,maxmass,itermax
+      common/extra/ istf,imss,ilod,idis,igeo,icms,iall
+      common/smatl/ dcc,dkk,dmm,a1,a2,a3,gx,gy,gz,po,px,py
+     &             ,sy1,etan1,pxx1,sy2,etan2,pxx2
+      common/nmatl/ nelpress,igravity_on,iload_num
+      common/hex20/ ri1,ri2,ri3
+      common/folder/ fdn
+c
+cccccccccccc   PostScript support  ccccccccccccccccccccccccccc
+         common /globpar /gsize,cur_x,cur_y,cur_t,dperc,rotx,roty,rotz
+     &                    ,p_thick,pxmove,pymove,xcap,ycap,scap
+     &                    ,c_thick,gnum1,gnum2
+     &                    ,r_back,g_back,b_back
+c
+       common /paramsub/ isub1,isub2,isub3,isub4,isub5,isub6
+     &                  ,isub00
+       common /paramcon/ ngeom,nprob,max_mode
+c
+       character*2 fdn
+       real*8       dcc,dkk,dmm,a1,a2,a3,gx,gy,gz,po,px,py
+       real*8              gsize,cur_x,cur_y,cur_t,dperc,rotx,roty,rotz
+     &                    ,p_thick,pxmove,pymove,xcap,ycap,scap
+     &                    ,c_thick,gnum1,gnum2
+     &                    ,r_back,g_back,b_back
