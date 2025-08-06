@@ -91,12 +91,12 @@
              DO k=zb1,zb2   !0,nz   
              DO j=yb1,yb2
                 !2D channel flow
-                !bcxu(ii,j,k) = ux1*6.0*(y(j)-yOrigin)*(yout-y(j))/(yout-yOrigin)**2
+                bcxu(ii,j,k) = ux1*6.0*(y(j)-yOrigin)*(yout-y(j))/(yout-yOrigin)**2
 
                 !Pipe flow
-                bcxu(ii,j,k) = ux1*(1.0d0 - (y(j)**2 + z(k)**2) )
-                bcxv(ii,j,k) = vx1 
-                bcxw(ii,j,k) = wx1
+                !bcxu(ii,j,k) = ux1*(1.0d0 - (y(j)**2 + z(k)**2) )
+                !bcxv(ii,j,k) = vx1 
+                !bcxw(ii,j,k) = wx1
              ENDDO
              ENDDO
 
@@ -860,8 +860,8 @@
     ppz1=pppz1
     ppz2=pppz2
 
-    !Ye, call pressure wave
-    call set_pressure_wave(ppx1,ppx2)
+    !Ye, call pressure wave for aorta
+    !call set_pressure_wave(ppx1,ppx2)
     !========================================
 
     iHomo = 0

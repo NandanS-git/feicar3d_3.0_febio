@@ -75,6 +75,7 @@
     REAL(KIND=CGREAL) :: xP,yP,zP,uP,vP,wP,fxP,fyP,fzP,sxP,syP,szP
     REAL(KIND=CGREAL) :: fxP1,fyP1,fzP1,uP1,vP1,wP1    
 
+    print*, "in write_probe_files", nProbeBody
     DO m= 1, nProbeBody
 
       iBody = markerProbe(m,1)

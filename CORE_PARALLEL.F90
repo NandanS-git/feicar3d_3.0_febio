@@ -29,7 +29,7 @@
   
     CALL read_inputs_body() !read from 'Canonical_Body_In.dat'
 
-    ! Assign last processors, from (nProcs-nElastic) to (nProcs-1), for the elastic bodies
+    ! Assign first processors, from (0) to (nElastic-1) for the elastic bodies
     do i=1,nElastic
        !proc_s(i) = nProcs_g-nElastic + i-1 
        proc_s(i) = i-1
@@ -44,7 +44,7 @@
     !if (lProc_g .lt. nProcs_g-nElastic) then
     if (lProc_g .gt. nElastic-1) then
 
-       ! in the flow group, nProcs is number of processors, and lProc is the procssor ID.   
+       ! in the flow group, nProcs is number of processors, and lProc is the processor ID.   
        call MPI_COMM_SIZE (flow_comm,  nProcs,  ierr)
        call MPI_GROUP_RANK(flow_group, lProc, ierr)
 
@@ -98,7 +98,7 @@
     INTEGER :: i, id, izc
     !********************
 
-    !Ye, store number of sclieces in 2D decomposition
+    !Ye, store number of slices in 2D decomposition
     ALLOCATE(numSlicesY(1:nProcs))
     ALLOCATE(numSlicesZ(1:nProcs))
     

@@ -186,7 +186,7 @@
 
     write(fname1,'(I7.7)')  ntime
     write(fname2,'(I4.4)')  lProc
-    fname1 = 'q_'//trim(fname1)//'.'//fname2
+    fname1 = 'out/q_'//trim(fname1)//'.'//fname2
     print*,'Write to file: ',fname1
 
     OPEN(UNIT=70,FILE=fname1,STATUS='UNKNOWN')
@@ -268,7 +268,7 @@
     !   Marker points viz file
     
     write(fname2,'(I7.7)')  ntime
-    fname2 = 'marker_'//trim(fname2)
+    fname2 = 'out/marker_'//trim(fname2)
     print*,'Write to file: ',fname2
 
     !IF ( boundary_motion == MOVING_BOUNDARY ) THEN

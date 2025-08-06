@@ -66,7 +66,7 @@
      CALL MPI_Initialize()
      
      !if(lProc_g .lt. nProcs_g-nElastic) then    ! if the processor is for flow
-     if (lProc_g .gt. nElastic-1) then
+     if (lProc_g .gt. nElastic-1) then             ! for flow processes
 
        if(lProc .eq. proc_m) PRINT*,'ENTERING INIT_PROGRAM'
        CALL init_program()
@@ -435,7 +435,7 @@
     READ(ifuBodyIn,*)nbody
     !PRINT*,'   nBody = ',nBody
 
-! allocate memory -------------------------------------------------------------
+   ! allocate memory -------------------------------------------------------------
 
     ALLOCATE(canonical_body_type(nBody))
     ALLOCATE(body_dim(nBody))
@@ -518,7 +518,7 @@
     ALLOCATE(forced_motion_spec(nbody))
     ALLOCATE(density_solid(nBody),zoom_factor(nBody))
 
-! initialize values and arrays ------------------------------------------------
+   ! initialize values and arrays ------------------------------------------------
  
     nPtsBodyMarker = 0
 
@@ -578,7 +578,7 @@
     freqangy    = 0.0_CGREAL
     freqangz    = 0.0_CGREAL        
 
-! read input file pertinent to internal boundary ------------------------------
+   ! read input file pertinent to internal boundary ------------------------------
 
     boundary_motion = FIXED_BOUNDARY
     elastic_present = 0
@@ -803,7 +803,7 @@
     CALL set_iblank_body_fast()
 
             CALL write_dump()
-            call sleep(15)
+            !call sleep(15)
             !STOP
 
     call MPI_BARRIER(flow_comm,ierr)

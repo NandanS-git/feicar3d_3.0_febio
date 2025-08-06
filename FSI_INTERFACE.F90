@@ -198,102 +198,106 @@
     ! if matches the flow solver
     do ie= 1, nElastic
 
-    call MPI_RECV(itime_s, 1, MPI_INTEGER, proc_s(ie), 1, &
-                  MPI_COMM_WORLD,istatus,ierr)
+      call MPI_RECV(itime_s, 1, MPI_INTEGER, proc_s(ie), 1, &
+                     MPI_COMM_WORLD,istatus,ierr)
 
-!    if(itime_s .ne. ntime-ntime_start) then
-     if(itime_s .ne. ntime) then
-       print*, proc_s(ie), 'WARNING: itime_s not equal to ntime.  Two solvers are at   &
-       different time levels!'
-       print*,'itime s = ', itime_s+1, 'ntime =', ntime
-       stop
-    endif
+   !    if(itime_s .ne. ntime-ntime_start) then
+      if(itime_s .ne. ntime) then
+         print*, proc_s(ie), 'WARNING: itime_s not equal to ntime.  Two solvers are at   &
+         different time levels!'
+         print*,'itime s = ', itime_s+1, 'ntime =', ntime
+         stop
+      endif
 
-    call MPI_SEND(relax_FSIp, 1, MPI_DOUBLE_PRECISION, proc_s(ie), 1, &
-                  MPI_COMM_WORLD,istatus,ierr)
+      call MPI_SEND(relax_FSIp, 1, MPI_DOUBLE_PRECISION, proc_s(ie), 1, &
+                     MPI_COMM_WORLD,istatus,ierr)
 
-! compute the nodal force by multiplying the distributed force by 
-! the effective area
-!--------
+   ! compute the nodal force by multiplying the distributed force by 
+   ! the effective area
+   !--------
 
-    xdata_s(:, :) = 0.0_CGREAL
-    ydata_s(:, :) = 0.0_CGREAL
-    zdata_s(:, :) = 0.0_CGREAL
+      xdata_s(:, :) = 0.0_CGREAL
+      ydata_s(:, :) = 0.0_CGREAL
+      zdata_s(:, :) = 0.0_CGREAL
 
-    fsi_on = 1
+      fsi_on = 1
 
-    fac = density_fluid
-    !if( (time-time_start) < FSI_delay) then
-    if ( (nread.eq.0).and.(time-time_start) < FSI_delay )then
-       fsi_on = 0
-       fac = 1.0d0 - exp(-5.0d0*(time-time_start)/FSI_delay)
-       fac =  density_fluid * fac
-       print*,'FSI disabled because time < fsi_delay.' 
-    endif
- 
-    iBody = bodyInFlowID(ie)      ! get the corresponding body id in flow
+      fac = density_fluid
+      !if( (time-time_start) < FSI_delay) then
+      if ( (nread.eq.0).and.(time-time_start) < FSI_delay )then
+         fsi_on = 0
+         fac = 1.0d0 - exp(-5.0d0*(time-time_start)/FSI_delay)
+         fac =  density_fluid * fac
+         print*,'FSI disabled because time < fsi_delay.' 
+      endif
+   
+      iBody = bodyInFlowID(ie)      ! get the corresponding body id in flow
 
-    ! integrate the filtered force over all the elements
-    DO m = 1, nPtsBodyMarker(iBody) 
-       xdata_s(m, 1) = xMarkerForce(m,iBody) * fac
-       ydata_s(m, 1) = yMarkerForce(m,iBody) * fac
-       zdata_s(m, 1) = zMarkerForce(m,iBody) * fac
-    ENDDO     ! end m 
+      ! integrate the filtered force over all the elements
+      DO m = 1, nPtsBodyMarker(iBody) 
+         xdata_s(m, 1) = xMarkerForce(m,iBody) * fac
+         ydata_s(m, 1) = yMarkerForce(m,iBody) * fac
+         zdata_s(m, 1) = zMarkerForce(m,iBody) * fac
+      ENDDO     ! end m 
 
-    xfmax = maxval(abs(xdata_s(1:nPtsMax_s, 1)))
-    yfmax = maxval(abs(ydata_s(1:nPtsMax_s, 1)))
-    zfmax = maxval(abs(zdata_s(1:nPtsMax_s, 1)))
-    
-    maxforcexloc = 1
-    do m = 1, nPtsBodyMarker(iBody)
-       if (abs(xdata_s(m,1)) >= abs(xdata_s(maxforcexloc,1))) then
-          maxforcexloc = m
-       endif
-    enddo
+      xfmax = maxval(abs(xdata_s(1:nPtsMax_s, 1)))
+      yfmax = maxval(abs(ydata_s(1:nPtsMax_s, 1)))
+      zfmax = maxval(abs(zdata_s(1:nPtsMax_s, 1)))
+      
+      maxforcexloc = 1
+      do m = 1, nPtsBodyMarker(iBody)
+         if (abs(xdata_s(m,1)) >= abs(xdata_s(maxforcexloc,1))) then
+            maxforcexloc = m
+         endif
+      enddo
 
-    maxforceyloc = 1
-    do m = 1, nPtsBodyMarker(iBody)
-       if (abs(ydata_s(m,1)) >= abs(ydata_s(maxforceyloc,1))) then
-          maxforceyloc = m
-       endif
-    enddo
+      maxforceyloc = 1
+      do m = 1, nPtsBodyMarker(iBody)
+         if (abs(ydata_s(m,1)) >= abs(ydata_s(maxforceyloc,1))) then
+            maxforceyloc = m
+         endif
+      enddo
 
-    maxforcezloc = 1
-    do m = 1, nPtsBodyMarker(iBody)
-       if (abs(zdata_s(m,1)) >= abs(zdata_s(maxforcezloc,1))) then
-          maxforcezloc = m
-       endif
-    enddo
+      maxforcezloc = 1
+      do m = 1, nPtsBodyMarker(iBody)
+         if (abs(zdata_s(m,1)) >= abs(zdata_s(maxforcezloc,1))) then
+            maxforcezloc = m
+         endif
+      enddo
 
-    ! send the marker point force to the solid solver
-    print*, 'Flow sending force to elastic body #', ie
-    write(*,'(a, 3E15.5)') ' Maximum force = :', xfmax, yfmax, zfmax
-    write(*,*)'Maxumum force @ :', maxforcexloc, maxforceyloc,  &
-                                   maxforcezloc
+      ! send the marker point force to the solid solver
+      print*, 'Flow sending force to elastic body #', ie
+      write(*,'(a, 3E15.5)') ' Maximum force = :', xfmax, yfmax, zfmax
+      write(*,*)'Maxumum force @ :', maxforcexloc, maxforceyloc,  &
+                                    maxforcezloc
 
-    !call MPI_SEND(fsi_on, 1, MPI_INTEGER, proc_s(ie), 1, &
-    !              MPI_COMM_WORLD,istatus,ierr)
+      !call MPI_SEND(fsi_on, 1, MPI_INTEGER, proc_s(ie), 1, &
+      !              MPI_COMM_WORLD,istatus,ierr)
 
-    !call MPI_SEND(iter_FSI, 1, MPI_INTEGER,            &
-    !                       proc_s(ie), 1, MPI_COMM_WORLD,istatus,ierr)
+      !call MPI_SEND(iter_FSI, 1, MPI_INTEGER,            &
+      !                       proc_s(ie), 1, MPI_COMM_WORLD,istatus,ierr)
 
-    !call MPI_SEND(density_fluid, 1, MPI_DOUBLE_PRECISION, proc_s(ie), 1, &
-    !              MPI_COMM_WORLD,istatus,ierr)
+      !call MPI_SEND(density_fluid, 1, MPI_DOUBLE_PRECISION, proc_s(ie), 1, &
+      !              MPI_COMM_WORLD,istatus,ierr)
 
-    call MPI_SEND(xdata_s, ndata_s, MPI_DOUBLE_PRECISION, proc_s(ie), 1,  &
-                  MPI_COMM_WORLD,istatus,ierr)
+      call MPI_SEND(xdata_s, ndata_s, MPI_DOUBLE_PRECISION, proc_s(ie), 1,  &
+                     MPI_COMM_WORLD,istatus,ierr)
 
-    call MPI_SEND(ydata_s, ndata_s, MPI_DOUBLE_PRECISION, proc_s(ie), 1,  &
-                  MPI_COMM_WORLD,istatus,ierr)
+      call MPI_SEND(ydata_s, ndata_s, MPI_DOUBLE_PRECISION, proc_s(ie), 1,  &
+                     MPI_COMM_WORLD,istatus,ierr)
 
-    call MPI_SEND(zdata_s, ndata_s, MPI_DOUBLE_PRECISION, proc_s(ie), 1,  &
-                  MPI_COMM_WORLD,istatus,ierr)
+      call MPI_SEND(zdata_s, ndata_s, MPI_DOUBLE_PRECISION, proc_s(ie), 1,  &
+                     MPI_COMM_WORLD,istatus,ierr)
 
-    !write(*,100) 'Interp_force:', xdata_s(1:10,1)
-    !write(*,100) 'Interp_force:', ydata_s(1:10,1)
-    !write(*,100) 'Interp_force:', zdata_s(1:10,1)
-    call MPI_recv(resMax_FSIp, 1, MPI_double_precision,            &
-                  proc_s(ie), 1, MPI_COMM_WORLD,istatus,ierr)
+      print*, 'Flow sent flow data to elastic'
+
+      !write(*,100) 'Interp_force:', xdata_s(1:10,1)
+      !write(*,100) 'Interp_force:', ydata_s(1:10,1)
+      !write(*,100) 'Interp_force:', zdata_s(1:10,1)
+      call MPI_recv(resMax_FSIp, 1, MPI_double_precision,            &
+                     proc_s(ie), 1, MPI_COMM_WORLD,istatus,ierr)
+
+      print*, 'Flow recv resMax_FSIp from elastic', resMax_FSIp
 
     enddo !enddo ie
 
@@ -344,7 +348,7 @@
 
   do ie=1, nelastic
     ! Get the node position first
-    print*, 'Flow receiving from elastic body #', ie
+    print*, 'Flow receiving nodal position from elastic body #', ie
 
     xdata_s(:, :) = 0.0_CGREAL
     ydata_s(:, :) = 0.0_CGREAL

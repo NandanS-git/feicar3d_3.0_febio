@@ -23,6 +23,11 @@
                          bodyResolution, bodyResolutionNormalized,  &
                          rad,theta,phi, xTemp, yTemp, zTemp
     REAL(KIND=CGREAL) :: cosalpha,sinalpha
+
+    ! by Nandan for reading unstruc mesh from Gmsh
+    INTEGER                :: numTags, i1
+    CHARACTER (LEN = 72)   :: cLine
+    INTEGER, allocatable   :: ibElTagVal(:)
 !------------------------------------------------ 
     
     ! Set read Marker flag
@@ -43,7 +48,8 @@
     yBodyMarker = 0.0_CGREAL
     zBodyMarker = 0.0_CGREAL
 
-    OPEN(ifuUnstrucSurfIn, FILE='unstruc_surface_in.dat',STATUS='UNKNOWN')
+    !OPEN(ifuUnstrucSurfIn, FILE='unstruc_surface_in.dat',STATUS='UNKNOWN')
+    OPEN(ifuUnstrucSurfIn, FILE='cylinderPlateTransfiniteSurface.msh',STATUS='UNKNOWN')
     OPEN(ifuMarkerIn,      FILE='marker2D_in.dat',       STATUS='UNKNOWN')
 
     ! Select appropriate body type
@@ -204,39 +210,90 @@
        CASE(UNSTRUCTURED_SURFACE)
           !PRINT*,'  SETTING UP UNSTRUCTURED SURFACE for Body #',iBody
 
-          READ(ifuUnstrucSurfIn,*)
-          READ(ifuUnstrucSurfIn,*)
-          READ(ifuUnstrucSurfIn,*) nPtsBodyMarkerIn, totNumTriElemIn
-          READ(ifuUnstrucSurfIn,*)
-          IF ( nPtsBodyMarkerIn /= nPtsBodyMarker(iBody) ) THEN
-             PRINT*,'Init_Marker: Inconsistent canonical_body_in.dat and unstruc_surface_in.dat files for body = ', iBody
-             PRINT*,'             Reading in canonical_body_in.dat    nPtsBodyMarker   = ',nPtsBodyMarker(iBody)
-             PRINT*,'             Reading from unstruc_surface_in.dat nPtsBodyMarkerIn = ',nPtsBodyMarkerIn
-             STOP
-          ENDIF ! nPtsBodyMarkerIn
+         !  READ(ifuUnstrucSurfIn,*)
+         !  READ(ifuUnstrucSurfIn,*)
+         !  READ(ifuUnstrucSurfIn,*) nPtsBodyMarkerIn, totNumTriElemIn
+         !  READ(ifuUnstrucSurfIn,*)
+         !  IF ( nPtsBodyMarkerIn /= nPtsBodyMarker(iBody) ) THEN
+         !     PRINT*,'Init_Marker: Inconsistent canonical_body_in.dat and unstruc_surface_in.dat files for body = ', iBody
+         !     PRINT*,'             Reading in canonical_body_in.dat    nPtsBodyMarker   = ',nPtsBodyMarker(iBody)
+         !     PRINT*,'             Reading from unstruc_surface_in.dat nPtsBodyMarkerIn = ',nPtsBodyMarkerIn
+         !     STOP
+         !  ENDIF ! nPtsBodyMarkerIn
              
-          IF ( totNumTriElemIn /= totNumTriElem(iBody) ) THEN
-             PRINT*,'Init_Marker: Inconsistent canonical_body_in.dat and unstruc_surface_in.dat files for body = ', iBody
-             PRINT*,'             Reading in canonical_body_in.dat     totNumTriElem   = ', totNumTriElem(iBody)
-             PRINT*,'             Reading from unstruc_surface_in.dat  totNumTriElemIn = ', totNumTriElemIn
-          ENDIF !  totNumTriElemIn
+         !  IF ( totNumTriElemIn /= totNumTriElem(iBody) ) THEN
+         !     PRINT*,'Init_Marker: Inconsistent canonical_body_in.dat and unstruc_surface_in.dat files for body = ', iBody
+         !     PRINT*,'             Reading in canonical_body_in.dat     totNumTriElem   = ', totNumTriElem(iBody)
+         !     PRINT*,'             Reading from unstruc_surface_in.dat  totNumTriElemIn = ', totNumTriElemIn
+         !  ENDIF !  totNumTriElemIn
  
-          DO m=1,nPtsBodyMarker(iBody)
-             !READ(ifuUnstrucSurfIn,*) i,xBodyMarker(m,iBody),yBodyMarker(m,iBody),zBodyMarker(m,iBody)
+         !  DO m=1,nPtsBodyMarker(iBody)
+         !     !READ(ifuUnstrucSurfIn,*) i,xBodyMarker(m,iBody),yBodyMarker(m,iBody),zBodyMarker(m,iBody)
 
-             READ(ifuUnstrucSurfIn,*) i, xTemp, yTemp, zTemp
+         !     READ(ifuUnstrucSurfIn,*) i, xTemp, yTemp, zTemp
 
-             xBodyMarker(m,iBody) = xTemp*zoom_factor(iBody)
-             yBodyMarker(m,iBody) = yTemp*zoom_factor(iBody)
-             zBodyMarker(m,iBody) = zTemp*zoom_factor(iBody)
-          ENDDO
+         !     xBodyMarker(m,iBody) = xTemp*zoom_factor(iBody)
+         !     yBodyMarker(m,iBody) = yTemp*zoom_factor(iBody)
+         !     zBodyMarker(m,iBody) = zTemp*zoom_factor(iBody)
+         !  ENDDO
 
-          READ(ifuUnstrucSurfIn,*)
-          DO  j=1,totNumTriElem(iBody)
-             READ(ifuUnstrucSurfIn,*) i,triElemNeig(1,j,iBody),triElemNeig(2,j,iBody),triElemNeig(3,j,iBody)
-          ENDDO
-          READ(ifuUnstrucSurfIn,*)
-          READ(ifuUnstrucSurfIn,*)pointOutsideBodyX(iBody),pointOutsideBodyY(iBody),pointOutsideBodyZ(iBody)
+         !  READ(ifuUnstrucSurfIn,*)
+         !  DO  j=1,totNumTriElem(iBody)
+         !     READ(ifuUnstrucSurfIn,*) i,triElemNeig(1,j,iBody),triElemNeig(2,j,iBody),triElemNeig(3,j,iBody)
+         !  ENDDO
+         !  READ(ifuUnstrucSurfIn,*)
+         !  READ(ifuUnstrucSurfIn,*)pointOutsideBodyX(iBody),pointOutsideBodyY(iBody),pointOutsideBodyZ(iBody)
+
+         ! by Nandan
+         DO i=1,4
+            READ(ifuUnstrucSurfIn,*)
+         END DO
+
+         READ(ifuUnstrucSurfIn,*) numTags
+         print*, 'numTags', numTags
+         ALLOCATE ( ibElTagVal(numTags) )
+
+         DO i = 1, numTags
+           READ (ifuUnstrucSurfIn,*) i1, ibElTagVal(n), cLine
+           WRITE (6,*) i1, ibElTagVal(n), cLine
+         END DO
+
+         DO n = 1, 2
+           READ (ifuUnstrucSurfIn,*) cLine
+         END DO
+
+         READ(ifuUnstrucSurfIn,*) nPtsBodyMarkerIn
+
+         IF ( nPtsBodyMarkerIn /= nPtsBodyMarker(iBody) ) THEN
+            PRINT*,'Init_Marker: Inconsistent canonical_body_in.dat and unstruc_surface_in.dat files for body = ', iBody
+            PRINT*,'             Reading in canonical_body_in.dat    nPtsBodyMarker   = ',nPtsBodyMarker(iBody)
+            PRINT*,'             Reading from unstruc_surface_in.dat nPtsBodyMarkerIn = ',nPtsBodyMarkerIn
+            STOP
+         ENDIF ! nPtsBodyMarkerIn
+
+         DO n = 1, nPtsBodyMarkerIn
+            READ (ifuUnstrucSurfIn,*) i1, xBodyMarker(n,iBody), yBodyMarker(n,iBody), zBodyMarker(n,iBody)
+         END DO
+
+         DO n = 1, 2
+            READ (ifuUnstrucSurfIn,*)
+         END DO  
+
+         READ(ifuUnstrucSurfIn,*) totNumTriElemIn
+
+         IF ( totNumTriElemIn /= totNumTriElem(iBody) ) THEN
+            PRINT*,'Init_Marker: Inconsistent canonical_body_in.dat and unstruc_surface_in.dat files for body = ', iBody
+            PRINT*,'             Reading in canonical_body_in.dat     totNumTriElem   = ', totNumTriElem(iBody)
+            PRINT*,'             Reading from unstruc_surface_in.dat  totNumTriElemIn = ', totNumTriElemIn
+         ENDIF !  totNumTriElemIn
+
+         DO n = 1, totNumTriElemIn
+            READ (ifuUnstrucSurfIn,*) i1, i1, i1, i1, i1, triElemNeig(1,n,iBody), triElemNeig(2,n,iBody), triElemNeig(3,n,iBody)
+         END DO
+
+         open (101, file='pointOutsideBody.dat')
+            READ(101,*) pointOutsideBodyX(iBody),pointOutsideBodyY(iBody),pointOutsideBodyZ(iBody)
+         close(101)
 
        END SELECT ! canonical_body_type
     ENDDO ! iBody
